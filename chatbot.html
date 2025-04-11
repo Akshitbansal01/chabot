@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAssist AI - Powered by Gemini</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .chat-container { width: 100%; max-width: 700px; height: 85vh; background: white; border-radius: 20px; box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .chat-header { padding: 20px 25px; background: #ffffff; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); }
+        .chat-header svg { width: 28px; height: 28px; color: #6b48ff; }
+        .chat-header h1 { font-size: 20px; font-weight: 600; color: #333; }
+        .chat-content { flex: 1; padding: 25px; overflow-y: auto; background: #fafafa; display: flex; flex-direction: column; gap: 20px; }
+        .message { max-width: 75%; padding: 12px 18px; border-radius: 15px; font-size: 15px; line-height: 1.5; animation: slideIn 0.3s ease; }
+        .user-message { align-self: flex-end; background: #6b48ff; color: white; border-bottom-right-radius: 4px; }
+        .bot-message { align-self: flex-start; background: white; color: #333; border: 1px solid #eee; border-bottom-left-radius: 4px; }
+        .chat-input-container { padding: 20px; background: white; border-top: 1px solid #f0f0f0; display: flex; gap: 12px; align-items: center; }
+        .chat-input { flex: 1; padding: 12px 20px; border-radius: 25px; border: 1px solid #ddd; outline: none; font-size: 15px; resize: none; min-height: 50px; max-height: 150px; background: #f8f8f8; transition: border-color 0.2s; }
+        .chat-input:focus { border-color: #6b48ff; box-shadow: 0 0 0 3px rgba(107, 72, 255, 0.1); }
+        .send-button { width: 50px; height: 50px; border-radius: 50%; background: #6b48ff; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .send-button:hover { background: #5a3de6; transform: scale(1.05); }
+        .send-button svg { width: 22px; height: 22px; }
+        .typing-indicator { display: none; align-self: flex-start; padding: 12px 18px; background: white; border: 1px solid #eee; border-radius: 15px; border-bottom-left-radius: 4px; }
+        .typing-indicator span { display: inline-block; width: 8px; height: 8px; background: #6b48ff; border-radius: 50%; margin-right: 5px; animation: typing 1s infinite; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; margin-right: 0; }
+        @keyframes typing { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .welcome-container { padding: 40px 20px; display: flex; flex-direction: column; align-items: center; gap: 25px; text-align: center; flex: 1; justify-content: center; }
+        .welcome-icon { width: 90px; height: 90px; background: rgba(107, 72, 255, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .welcome-icon svg { width: 45px; height: 45px; stroke: #6b48ff; }
+        .welcome-title { font-size: 28px; font-weight: 700; color: #333; }
+        .welcome-subtitle { font-size: 16px; color: #666; max-width: 400px; line-height: 1.6; }
+        .example-queries { display: grid; gap: 12px; width: 100%; max-width: 400px; margin-top: 20px; }
+        .query-example { padding: 12px 20px; background: white; border: 1px solid rgba(107, 72, 255, 0.2); border-radius: 12px; font-size: 14px; color: #6b48ff; cursor: pointer; transition: all 0.2s; text-align: left; }
+        .query-example:hover { background: rgba(107, 72, 255, 0.05); transform: translateX(5px); }
+        @media (max-width: 640px) { .chat-container { height: 100vh; margin: 0; border-radius: 0; } .chat-content { padding: 15px; } .chat-input-container { padding: 15px; } }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <h1>EduAssist AI</h1>
+        </div>
+        
+        <div class="chat-content" id="chat-content">
+            <div class="welcome-container">
+                <div class="welcome-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+                <h2 class="welcome-title">Your Learning Companion</h2>
+                <p class="welcome-subtitle">I'm here to help you with any educational questions, powered by Gemini. What would you like to explore today?</p>
+                <div class="example-queries">
+                    <button class="query-example" onclick="submitExample(this.textContent)">Explain photosynthesis</button>
+                    <button class="query-example" onclick="submitExample(this.textContent)">Solve 2x + 5 = 15</button>
+                    <button class="query-example" onclick="submitExample(this.textContent)">World War II summary</button>
+                </div>
+            </div>
+            <div class="typing-indicator" id="typing-indicator">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <textarea class="chat-input" id="chat-input" placeholder="Ask me anything..." rows="1" aria-label="Message input"></textarea>
+            <button class="send-button" id="send-button" aria-label="Send message">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatContent = document.getElementById('chat-content');
+            const chatInput = document.getElementById('chat-input');
+            const sendButton = document.getElementById('send-button');
+            const typingIndicator = document.getElementById('typing-indicator');
+            const API_KEY = 'AIzaSyBpdiprswsQMkfNEjDXu_M08XjtyNjAojo'; // Your Gemini API key
+            let isSending = false;
+
+            async function getGeminiResponse(prompt) {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
+                const requestBody = {
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }]
+                };
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const generatedText = data.candidates[0].content.parts[0].text.trim();
+                    return generatedText;
+                } catch (error) {
+                    console.error('Gemini API error:', error);
+                    return 'Sorry, I couldn’t get a response from Gemini. Please try again later.';
+                }
+            }
+
+            function getBotResponse(userMessage) {
+                return new Promise(async (resolve) => {
+                    const messageLower = userMessage.toLowerCase().trim();
+                    const greetings = ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "hola", "salut", "ciao"];
+                    const greetingResponses = [
+                        "Hello there! How can I assist you today?",
+                        "Hi! What’s on your mind?",
+                        "Hey! Nice to see you! How can I help?",
+                        "Good morning! Ready to learn something new?",
+                        "Good afternoon! How’s your day going so far?",
+                        "Good evening! What can I do for you tonight?",
+                        "Hola! ¿En qué puedo ayudarte?",
+                        "Salut! Comment allez-vous?",
+                        "Ciao! Come posso aiutarti oggi?"
+                    ];
+
+                    for (let i = 0; i < greetings.length; i++) {
+                        if (messageLower.includes(greetings[i])) {
+                            resolve(greetingResponses[i % greetingResponses.length]);
+                            return;
+                        }
+                    }
+
+                    const response = await getGeminiResponse(userMessage);
+                    resolve(response);
+                });
+            }
+
+            async function sendMessage() {
+                if (isSending) return;
+                const message = chatInput.value.trim();
+                if (!message) return;
+
+                isSending = true;
+                addMessage(message, 'user');
+                chatInput.value = '';
+                resizeInput();
+
+                typingIndicator.style.display = 'block';
+                chatContent.scrollTop = chatContent.scrollHeight;
+
+                try {
+                    const response = await getBotResponse(message);
+                    typingIndicator.style.display = 'none';
+                    addMessage(response, 'bot');
+                } catch (error) {
+                    console.error('Error:', error);
+                    typingIndicator.style.display = 'none';
+                    addMessage('Oops, something went wrong. Please try again!', 'bot');
+                } finally {
+                    isSending = false;
+                }
+            }
+
+            function addMessage(text, sender) {
+                const welcomeContainer = document.querySelector('.welcome-container');
+                if (welcomeContainer) welcomeContainer.remove();
+
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+                messageElement.textContent = text;
+
+                if (typingIndicator.parentNode === chatContent) {
+                    chatContent.insertBefore(messageElement, typingIndicator);
+                } else {
+                    chatContent.appendChild(messageElement);
+                }
+                chatContent.scrollTop = chatContent.scrollHeight;
+            }
+
+            function submitExample(text) {
+                chatInput.value = text;
+                sendMessage();
+            }
+            window.submitExample = submitExample;
+
+            function resizeInput() {
+                chatInput.style.height = 'auto';
+                chatInput.style.height = Math.min(chatInput.scrollHeight, 150) + 'px';
+            }
+
+            sendButton.addEventListener('click', () => sendMessage().catch(console.error));
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage().catch(console.error);
+                }
+            });
+            chatInput.addEventListener('input', resizeInput);
+
+            resizeInput();
+            chatInput.focus();
+            addMessage('Hello! I’m EduAssist AI, powered by Gemini. How can I assist your learning today?', 'bot');
+        });
+    </script>
+</body>
+</html>
